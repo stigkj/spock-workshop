@@ -37,12 +37,13 @@ class FileRepositorySpec extends Specification {
         
         then:
         thrown(NullPointerException)
+        notThrown(IllegalStateException)
     }
 
     @Ignore('Do not know how to trigger this')
     def 'illegal root folder'() {
         when:
-        new FileRepository(new File("!!<>@@??.åøæ."))
+        new FileRepository(new File("not-handled"))
 
         then:
         thrown(IllegalStateException)

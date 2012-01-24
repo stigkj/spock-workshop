@@ -28,8 +28,16 @@ class AdminServiceSpec extends Specification {
         then:
         1 * repository.persist('user', 'me')
         1 * repository.load('user') >> result()
-        1 * repository.load('user') >> {throw new }
         users == ['me'] as Set
+    }
+
+    def 'throwing exception'() {
+        when:
+        adminService.addUser('throws')
+
+        then:
+        1 * repository.persist('user', 'throws') >> {throw new IllegalStateException('problems')}
+        thrown(IllegalStateException)
     }
 
     @Unroll({"${name} contains 'ig' --> ${result}"})
