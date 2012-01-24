@@ -1,0 +1,63 @@
+apply plugin: 'groovy'
+
+group = 'nos.gradle.spock'
+version = 1.0
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    codeCoverage
+    codeCoverageAgent
+}
+
+dependencies {
+    compile 'com.google.guava:guava:11.0.1'
+
+    testCompile 'junit:junit:4.8'
+    testCompile 'org.spockframework:spock-core:0.5-groovy-1.8'
+
+    codeCoverage 'org.jacoco:org.jacoco.ant:0.5.5.201112152213@jar'
+    codeCoverage 'org.jacoco:org.jacoco.core:0.5.5.201112152213@jar'
+    codeCoverage 'org.jacoco:org.jacoco.report:0.5.5.201112152213@jar'
+    codeCoverage 'asm:asm:3.0'
+    codeCoverage 'asm:asm-commons:3.0'
+    codeCoverageAgent files("${rootProject.projectDir.path}/lib/jacocoagent.jar")
+
+    groovy 'org.codehaus.groovy:groovy-all:1.8.4@jar'
+}
+
+test {
+  jvmArgs "-javaagent:${configurations.codeCoverageAgent.singleFile}=destfile=${buildDirName}/coverage-results/jacoco.exec,sessionid=HSServ,append=false",
+    '-Djacoco=true',
+    '-Xms128m',
+    '-Xmx512m',
+    '-XX:MaxPermSize=128m'
+}
+
+task generateCoverageReport << {
+    ant.taskdef(name: 'jacocoreport', classname: 'org.jacoco.ant.ReportTask', classpath: configurations.codeCoverage.asPath)
+
+    ant.mkdir dir: "${buildDirName}/reports/coverage"
+
+    ant.jacocoreport {
+        executiondata {
+            file: 'jacoco.exec'
+        }
+
+        structure(name: project.name) {
+
+            classfiles {
+                fileset dir: "${project.buildDir.path}/classes/main"
+            }
+
+            sourcefiles {
+                fileset dir: "${project.projectDir.path}/src/main/java"
+            }
+        }
+
+        xml destfile: "${buildDirName}/reports/coverage/jacoco.xml"
+        html destdir: "${buildDirName}/reports/coverage"
+    }
+}
